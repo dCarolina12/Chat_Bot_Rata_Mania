@@ -1,0 +1,415 @@
+{
+  "nodes": [
+    {
+      "id": "promptTemplate_0",
+      "position": {
+        "x": -342.02317210348707,
+        "y": 322.7277840269966
+      },
+      "type": "customNode",
+      "data": {
+        "id": "promptTemplate_0",
+        "label": "Prompt Template",
+        "version": 1,
+        "name": "promptTemplate",
+        "type": "PromptTemplate",
+        "baseClasses": [
+          "PromptTemplate",
+          "BaseStringPromptTemplate",
+          "BasePromptTemplate",
+          "Runnable"
+        ],
+        "category": "Prompts",
+        "description": "Schema to represent a basic prompt for an LLM",
+        "inputParams": [
+          {
+            "label": "Template",
+            "name": "template",
+            "type": "string",
+            "rows": 4,
+            "placeholder": "What is a good name for a company that makes {product}?",
+            "id": "promptTemplate_0-input-template-string"
+          },
+          {
+            "label": "Format Prompt Values",
+            "name": "promptValues",
+            "type": "json",
+            "optional": true,
+            "acceptVariable": true,
+            "list": true,
+            "id": "promptTemplate_0-input-promptValues-json"
+          }
+        ],
+        "inputAnchors": [],
+        "inputs": {
+          "template": "Eres un extractor de datos en formato JSON estricto para la tienda \"Rata mania.\". \n\nTu ÚNICA función es analizar el mensaje del usuario y extraer la información en el siguiente JSON exacto:\n\n{\n  \"intencion\": \"adoptar\", \n  \"servicio\": \"rata_dumbo\",\n  \"fecha\": \"YYYY-MM-DD\",\n  \"hora\": \"HH:MM\",\n  \"cliente\": \"Nombre\"\n}\n\nReglas estrictas de \"intencion\":\n- Usa \"adoptar\", \"comprar\" o \"reservar\" si el usuario quiere agendar una cita, adoptar o adquirir un producto/mascota.\n- Usa \"catalogo\" si el usuario pregunta qué tienen disponible.\n- Usa \"fuera\" ÚNICAMENTE si el mensaje no tiene ninguna relación con la tienda.\n\nReglas de extracción:\n- \"servicio\": Si menciona una rata (dumbo, husky, hairless) o accesorio, extrae el identificador (ej: \"rata_dumbo\").\n- \"fecha\": Extrae cualquier fecha expresada en formato AAAA-MM-DD.\n- \"hora\": Extrae cualquier hora en formato HH:MM.\n- \"cliente\": Extrae el nombre de la persona si lo indica (ej: \"Carlos\").\n\nMensaje a analizar:\n\"{input}\"\n\nResponde ÚNICAMENTE con el objeto JSON parseable. Sin bloques de código markdown extra si no son necesarios, sin explicaciones.",
+          "promptValues": ""
+        },
+        "outputAnchors": [
+          {
+            "id": "promptTemplate_0-output-promptTemplate-PromptTemplate|BaseStringPromptTemplate|BasePromptTemplate|Runnable",
+            "name": "promptTemplate",
+            "label": "PromptTemplate",
+            "type": "PromptTemplate | BaseStringPromptTemplate | BasePromptTemplate | Runnable"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 519,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -342.02317210348707,
+        "y": 322.7277840269966
+      }
+    },
+    {
+      "id": "llmChain_0",
+      "position": {
+        "x": 84.34223605346713,
+        "y": -341.16586565136544
+      },
+      "type": "customNode",
+      "data": {
+        "id": "llmChain_0",
+        "label": "LLM Chain",
+        "version": 3,
+        "name": "llmChain",
+        "type": "LLMChain",
+        "baseClasses": [
+          "LLMChain",
+          "BaseChain",
+          "Runnable"
+        ],
+        "category": "Chains",
+        "description": "Chain to run queries against LLMs",
+        "inputParams": [
+          {
+            "label": "Chain Name",
+            "name": "chainName",
+            "type": "string",
+            "placeholder": "Name Your Chain",
+            "optional": true,
+            "id": "llmChain_0-input-chainName-string"
+          }
+        ],
+        "inputAnchors": [
+          {
+            "label": "Language Model",
+            "name": "model",
+            "type": "BaseLanguageModel",
+            "id": "llmChain_0-input-model-BaseLanguageModel"
+          },
+          {
+            "label": "Prompt",
+            "name": "prompt",
+            "type": "BasePromptTemplate",
+            "id": "llmChain_0-input-prompt-BasePromptTemplate"
+          },
+          {
+            "label": "Output Parser",
+            "name": "outputParser",
+            "type": "BaseLLMOutputParser",
+            "optional": true,
+            "id": "llmChain_0-input-outputParser-BaseLLMOutputParser"
+          },
+          {
+            "label": "Input Moderation",
+            "description": "Detect text that could generate harmful output and prevent it from being sent to the language model",
+            "name": "inputModeration",
+            "type": "Moderation",
+            "optional": true,
+            "list": true,
+            "id": "llmChain_0-input-inputModeration-Moderation"
+          }
+        ],
+        "inputs": {
+          "model": "{{groqChat_0.data.instance}}",
+          "prompt": "{{promptTemplate_0.data.instance}}",
+          "outputParser": "",
+          "inputModeration": [],
+          "chainName": "Extraer datos, sin autorizar operaciones"
+        },
+        "outputAnchors": [
+          {
+            "name": "output",
+            "label": "Output",
+            "type": "options",
+            "description": "",
+            "options": [
+              {
+                "id": "llmChain_0-output-llmChain-LLMChain|BaseChain|Runnable",
+                "name": "llmChain",
+                "label": "LLM Chain",
+                "description": "",
+                "type": "LLMChain | BaseChain | Runnable"
+              },
+              {
+                "id": "llmChain_0-output-outputPrediction-string|json",
+                "name": "outputPrediction",
+                "label": "Output Prediction",
+                "description": "",
+                "type": "string | json"
+              }
+            ],
+            "default": "outputPrediction"
+          }
+        ],
+        "outputs": {
+          "output": "outputPrediction"
+        },
+        "selected": false
+      },
+      "width": 300,
+      "height": 514,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 84.34223605346713,
+        "y": -341.16586565136544
+      }
+    },
+    {
+      "id": "customFunction_0",
+      "position": {
+        "x": 146.9691279143437,
+        "y": 247.57101702062295
+      },
+      "type": "customNode",
+      "data": {
+        "id": "customFunction_0",
+        "label": "Custom JS Function",
+        "version": 3,
+        "name": "customFunction",
+        "type": "CustomFunction",
+        "baseClasses": [
+          "CustomFunction",
+          "Utilities"
+        ],
+        "category": "Utilities",
+        "description": "Execute custom javascript function",
+        "inputParams": [
+          {
+            "label": "Input Variables",
+            "name": "functionInputVariables",
+            "description": "Input variables can be used in the function with prefix $. For example: $var",
+            "type": "json",
+            "optional": true,
+            "acceptVariable": true,
+            "list": true,
+            "id": "customFunction_0-input-functionInputVariables-json"
+          },
+          {
+            "label": "Function Name",
+            "name": "functionName",
+            "type": "string",
+            "optional": true,
+            "placeholder": "My Function",
+            "id": "customFunction_0-input-functionName-string"
+          },
+          {
+            "label": "Javascript Function",
+            "name": "javascriptFunction",
+            "type": "code",
+            "id": "customFunction_0-input-javascriptFunction-code"
+          }
+        ],
+        "inputAnchors": [
+          {
+            "label": "Additional Tools",
+            "description": "Tools can be used in the function with $tools.{tool_name}.invoke(args)",
+            "name": "tools",
+            "type": "Tool",
+            "list": true,
+            "optional": true,
+            "id": "customFunction_0-input-tools-Tool"
+          }
+        ],
+        "inputs": {
+          "functionInputVariables": "{\"extraccion\":\"{{llmChain_0.data.instance}}\"}",
+          "functionName": "Enviar a FastAPI",
+          "tools": [],
+          "javascriptFunction": "const API_URL = 'https://f698-2803-1800-132a-2d6a-f09a-3b79-484b-bb59.ngrok-free.app';\nconst fetch = require('node-fetch');\n\nconst mensaje = String($input || '').trim();\nconst session_id = $flow.sessionId || $flow.chatId;\n\nif (!session_id) return 'No se recibió una sesión. Abre una conversación nueva.';\n\nlet datos = {};\n\nif (!['confirmar', 'abortar', 'no', '/reset'].includes(mensaje.toLowerCase())) {\n    try {\n        let rawExtraccion = $extraccion;\n\n        // Si viene envuelto en un objeto de salida del LLM (ej. { text: \"...\" })\n        if (rawExtraccion && typeof rawExtraccion === 'object' && rawExtraccion.text) {\n            rawExtraccion = rawExtraccion.text;\n        }\n\n        // Parsear si viene como String\n        if (typeof rawExtraccion === 'string') {\n            const jsonLimpio = rawExtraccion.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\n            datos = JSON.parse(jsonLimpio);\n        } else if (typeof rawExtraccion === 'object' && rawExtraccion !== null) {\n            datos = rawExtraccion;\n        }\n\n        if (!datos || Array.isArray(datos) || typeof datos !== 'object') {\n            datos = {};\n        }\n    } catch (e) {\n        datos = {};\n    }\n}\n\ntry {\n    const response = await fetch(API_URL + '/chat', {\n        method: 'POST',\n        headers: {\n            'Content-Type': 'application/json',\n            'ngrok-skip-browser-warning': 'true'\n        },\n        body: JSON.stringify({ session_id, mensaje, datos }),\n        timeout: 8000\n    });\n\n    const resultado = await response.json();\n    if (typeof resultado.respuesta === 'string') return resultado.respuesta;\n    if (response.status === 422) return 'La API rechazó los datos (422 Unprocessable Entity).';\n\n    return 'La API no devolvió un resultado válido. Revisa la terminal del backend.';\n} catch (err) {\n    return `Error de conexión con la API: ${err.message}`;\n}\n"
+        },
+        "outputAnchors": [
+          {
+            "name": "output",
+            "label": "Output",
+            "type": "options",
+            "description": "",
+            "options": [
+              {
+                "id": "customFunction_0-output-output-string|number|boolean|json|array",
+                "name": "output",
+                "label": "Output",
+                "description": "",
+                "type": "string | number | boolean | json | array"
+              },
+              {
+                "id": "customFunction_0-output-EndingNode-CustomFunction",
+                "name": "EndingNode",
+                "label": "Ending Node",
+                "description": "",
+                "type": "CustomFunction"
+              }
+            ],
+            "default": "EndingNode"
+          }
+        ],
+        "outputs": {
+          "output": "EndingNode"
+        },
+        "selected": false
+      },
+      "width": 300,
+      "height": 732,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 146.9691279143437,
+        "y": 247.57101702062295
+      }
+    },
+    {
+      "id": "groqChat_0",
+      "position": {
+        "x": -303.9648368172045,
+        "y": -403.60850697137766
+      },
+      "type": "customNode",
+      "data": {
+        "id": "groqChat_0",
+        "label": "Groq",
+        "version": 4,
+        "name": "groqChat",
+        "type": "GroqChat",
+        "baseClasses": [
+          "GroqChat",
+          "BaseChatModel",
+          "BaseLanguageModel",
+          "Runnable"
+        ],
+        "category": "Chat Models",
+        "description": "Wrapper around Groq API with LPU Inference Engine",
+        "inputParams": [
+          {
+            "label": "Connect Credential",
+            "name": "credential",
+            "type": "credential",
+            "credentialNames": [
+              "groqApi"
+            ],
+            "optional": true,
+            "id": "groqChat_0-input-credential-credential",
+            "display": true
+          },
+          {
+            "label": "Model Name",
+            "name": "modelName",
+            "type": "asyncOptions",
+            "loadMethod": "listModels",
+            "placeholder": "llama3-70b-8192",
+            "id": "groqChat_0-input-modelName-asyncOptions",
+            "display": true
+          },
+          {
+            "label": "Temperature",
+            "name": "temperature",
+            "type": "number",
+            "step": 0.1,
+            "default": 0.9,
+            "optional": true,
+            "id": "groqChat_0-input-temperature-number",
+            "display": true
+          },
+          {
+            "label": "Max Tokens",
+            "name": "maxTokens",
+            "type": "number",
+            "step": 1,
+            "optional": true,
+            "additionalParams": true,
+            "id": "groqChat_0-input-maxTokens-number",
+            "display": true
+          },
+          {
+            "label": "Streaming",
+            "name": "streaming",
+            "type": "boolean",
+            "default": true,
+            "optional": true,
+            "id": "groqChat_0-input-streaming-boolean",
+            "display": true
+          }
+        ],
+        "inputAnchors": [
+          {
+            "label": "Cache",
+            "name": "cache",
+            "type": "BaseCache",
+            "optional": true,
+            "id": "groqChat_0-input-cache-BaseCache",
+            "display": true
+          }
+        ],
+        "inputs": {
+          "cache": "",
+          "modelName": "openai/gpt-oss-20b",
+          "temperature": 0.9,
+          "maxTokens": "",
+          "streaming": false
+        },
+        "outputAnchors": [
+          {
+            "id": "groqChat_0-output-groqChat-GroqChat|BaseChatModel|BaseLanguageModel|Runnable",
+            "name": "groqChat",
+            "label": "GroqChat",
+            "description": "Wrapper around Groq API with LPU Inference Engine",
+            "type": "GroqChat | BaseChatModel | BaseLanguageModel | Runnable"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 676,
+      "positionAbsolute": {
+        "x": -303.9648368172045,
+        "y": -403.60850697137766
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "llmChain_0",
+      "sourceHandle": "llmChain_0-output-outputPrediction-string|json",
+      "target": "customFunction_0",
+      "targetHandle": "customFunction_0-input-functionInputVariables-json",
+      "type": "buttonedge",
+      "id": "llmChain_0-customFunction_0-functionInputVariables",
+      "data": {
+        "label": ""
+      }
+    },
+    {
+      "source": "promptTemplate_0",
+      "sourceHandle": "promptTemplate_0-output-promptTemplate-PromptTemplate|BaseStringPromptTemplate|BasePromptTemplate|Runnable",
+      "target": "llmChain_0",
+      "targetHandle": "llmChain_0-input-prompt-BasePromptTemplate",
+      "type": "buttonedge",
+      "id": "promptTemplate_0-promptTemplate_0-output-promptTemplate-PromptTemplate|BaseStringPromptTemplate|BasePromptTemplate|Runnable-llmChain_0-llmChain_0-input-prompt-BasePromptTemplate"
+    },
+    {
+      "source": "groqChat_0",
+      "sourceHandle": "groqChat_0-output-groqChat-GroqChat|BaseChatModel|BaseLanguageModel|Runnable",
+      "target": "llmChain_0",
+      "targetHandle": "llmChain_0-input-model-BaseLanguageModel",
+      "type": "buttonedge",
+      "id": "groqChat_0-groqChat_0-output-groqChat-GroqChat|BaseChatModel|BaseLanguageModel|Runnable-llmChain_0-llmChain_0-input-model-BaseLanguageModel"
+    }
+  ]
+}

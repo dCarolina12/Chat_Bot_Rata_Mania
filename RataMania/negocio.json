@@ -1,0 +1,25 @@
+{
+  "nombre": "Rata mania",
+  "datos_ficticios": true,
+  "ubicacion": "Carrera 19 # 20-30, Armenia (dirección ficticia)",
+  "zona_horaria": "America/Bogota",
+  "capacidad": 1,
+  "paso_minutos": 30,
+  "horarios": {
+    "0": ["09:00", "18:00"],
+    "1": ["09:00", "18:00"],
+    "2": ["09:00", "18:00"],
+    "3": ["09:00", "18:00"],
+    "4": ["09:00", "18:00"],
+    "5": ["09:00", "18:00"]
+  },
+  "servicios": {
+    "rata_husky": {"precio": 25, "duracion": "adopcion_inmediata"},
+    "rata_dumbo": {"precio": 30, "duracion": "adopcion_inmediata"},
+    "rata_hairless": {"precio": 35, "duracion": "adopcion_inmediata"},
+    "jaula_equipada": {"precio": 60, "duracion": "entrega"},
+    "alimento_premium": {"precio": 15, "duracion": "entrega"}
+  },
+  "condiciones": "Confirmar antes de registrar o cancelar. Una persona atendida a la vez. Domingo cerrado. No hay promociones informadas."
+}
+
