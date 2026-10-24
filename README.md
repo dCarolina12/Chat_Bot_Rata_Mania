@@ -17,7 +17,7 @@
 
 la documentación extendida y evidencias se encuentran en los siguientes enlaces:
 
-*  [**Presentación del Proyecto (PDF)**](docs/Presentacion_Segundo_Corte.pdf) (Explicación ejecutiva y flujo de trabajo)
+*  [**Presentación del Proyecto - Chatbot (PDF)**](docs/Chatbot.pdf) (Explicación ejecutiva y flujo de trabajo)
 *  [**Carpeta de Evidencias**](docs/evidencias/)
 
 ---
