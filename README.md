@@ -35,7 +35,7 @@ la documentación extendida y evidencias se encuentran en los siguientes enlaces
 1. **Clonar el repositorio o descargar la carpeta:**
    ```bash
 	git clone https://github.com/dCarolina12/Chat_Bot_Rata_Mania.git
-	cd RataMania/
+	cd Chat_Bot_Rata_Mania/
    ```
    
 2. **Configuracion rapida para despliegue:**
