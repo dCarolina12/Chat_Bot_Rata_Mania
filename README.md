@@ -19,7 +19,7 @@ la documentación extendida y evidencias se encuentran en los siguientes enlaces
 
 *  [**Presentación del Proyecto - Chatbot (PDF)**](docs/Chatbot.pdf) (Explicación ejecutiva y flujo de trabajo)
 *  [**Carpeta de Evidencias**](docs/evidencias/)
-*  [**Carpeta de bitaacora final (.zip)**](docs/bitacora) 
+*  [**Carpeta de bitacora final (.zip)**](docs/bitacora) 
 ---
 
 ## 🛠️ Requisitos Previos
