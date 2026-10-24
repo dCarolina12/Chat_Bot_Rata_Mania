@@ -1,4 +1,4 @@
-"""API de reservas para Rata mania — FastAPI con CRUD completo y flujo conversacional."""
+
 import json
 import os
 import re
@@ -6,35 +6,22 @@ import threading
 import uuid
 from datetime import datetime, date, timedelta
 from typing import Any, Dict, List, Optional
-
 from zoneinfo import ZoneInfo
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
-
 from pathlib import Path
 import subprocess
-
-# ---------------------------------------------------------------------------
-# Configuración global
-# ---------------------------------------------------------------------------
+# Configuracion global
 
 app = FastAPI(title="Rata mania · API de Reservas")
-
 ARCHIVO = "reservas.json"
 NEGOCIO_FILE = "negocio.json"
-
 _lock = threading.Lock()
-
 ZONA = ZoneInfo("America/Bogota")
-
-# Almacenamiento de sesiones conversacionales en memoria (por session_id)
 SESIONES: Dict[str, Dict[str, Any]] = {}
 
 script_ = Path(__file__).resolve().parent / "scripts/ratadb.sh"
 
-# ---------------------------------------------------------------------------
-# Utilidades de persistencia
-# ---------------------------------------------------------------------------
 
 def _cargar_negocio() -> dict:
     if not os.path.exists(NEGOCIO_FILE):
@@ -82,9 +69,8 @@ def _guardar_reservas_cancelar(reservas: list, codigo: str) -> None:
 
     except OSError as e:
         raise HTTPException(status_code=503, detail=f"Error al cancelar reservas: {e}")
-# ---------------------------------------------------------------------------
-# Lógica de disponibilidad
-# ---------------------------------------------------------------------------
+
+#disponibilidad
 
 def horarios_libres(dia: date, servicio: str, reservas: list) -> List[str]:
     """Devuelve los horarios disponibles para un día y servicio dados."""
@@ -97,7 +83,6 @@ def horarios_libres(dia: date, servicio: str, reservas: list) -> List[str]:
         return []
 
     duracion_str = servicios[servicio].get("duracion", "entrega")
-    # Si la duración es simbólica (adopcion_inmediata, entrega) usamos 1 paso
     try:
         duracion_min = int(duracion_str)
     except (ValueError, TypeError):
@@ -111,14 +96,12 @@ def horarios_libres(dia: date, servicio: str, reservas: list) -> List[str]:
     apertura = datetime.strptime(apertura_str, "%H:%M")
     cierre = datetime.strptime(cierre_str, "%H:%M")
 
-    # Todos los slots del día
     slots = []
     cursor = apertura
     while cursor + timedelta(minutes=duracion_min) <= cierre:
         slots.append(cursor.strftime("%H:%M"))
         cursor += timedelta(minutes=paso)
 
-    # Quitar slots que colisionen con reservas activas de ese día
     ocupados = [
         r for r in reservas
         if r.get("fecha") == dia.isoformat() and r.get("estado") == "activa"
@@ -163,10 +146,6 @@ def _validar_horario(dia: date, servicio: str, hora: str, reservas: list) -> Non
     if hora not in libres:
         raise HTTPException(status_code=409, detail=f"Horario ocupado o fuera de rango. Disponibles: {libres}")
 
-
-# ---------------------------------------------------------------------------
-# Modelos Pydantic
-# ---------------------------------------------------------------------------
 
 class ReservaIn(BaseModel):
     cliente: str
@@ -237,10 +216,6 @@ class ChatInput(BaseModel):
         return v
 
 
-# ---------------------------------------------------------------------------
-# CRUD 1 — RESERVAR  (POST /reservas)
-# ---------------------------------------------------------------------------
-
 @app.post("/reservas", status_code=201)
 async def reservar(payload: ReservaIn):
     """Crea una reserva nueva si el horario está disponible."""
@@ -278,10 +253,6 @@ async def reservar(payload: ReservaIn):
     return nueva
 
 
-# ---------------------------------------------------------------------------
-# CRUD 2 — CONSULTAR  (GET /reservas/{codigo})
-# ---------------------------------------------------------------------------
-
 @app.get("/reservas/{codigo}")
 async def consultar_reserva(codigo: str):
     """Devuelve la reserva indicada por su código único."""
@@ -291,10 +262,6 @@ async def consultar_reserva(codigo: str):
             return r
     raise HTTPException(status_code=404, detail=f"Reserva '{codigo}' no encontrada.")
 
-
-# ---------------------------------------------------------------------------
-# CRUD 3 — CANCELAR  (DELETE /reservas/{codigo})
-# ---------------------------------------------------------------------------
 
 @app.delete("/reservas/{codigo}")
 async def cancelar_reserva(codigo: str, confirmado: bool = Query(False)):
@@ -318,10 +285,6 @@ async def cancelar_reserva(codigo: str, confirmado: bool = Query(False)):
     raise HTTPException(status_code=404, detail=f"Reserva '{codigo}' no encontrada.")
 
 
-# ---------------------------------------------------------------------------
-# CRUD 4 — ACTUALIZAR  (PUT /reservas/{codigo})
-# ---------------------------------------------------------------------------
-
 @app.put("/reservas/{codigo}")
 async def actualizar_reserva(codigo: str, cambios: ReservaUpdate):
     """Actualiza cliente, fecha u hora de una reserva activa."""
@@ -339,7 +302,6 @@ async def actualizar_reserva(codigo: str, cambios: ReservaUpdate):
                 servicio = r["item"]
                 dia = date.fromisoformat(nueva_fecha)
 
-                # Validar disponibilidad excluyendo la propia reserva
                 otras = [x for x in reservas if x.get("codigo") != codigo]
                 _validar_horario(dia, servicio, nueva_hora, otras)
 
@@ -352,10 +314,6 @@ async def actualizar_reserva(codigo: str, cambios: ReservaUpdate):
 
     raise HTTPException(status_code=404, detail=f"Reserva '{codigo}' no encontrada.")
 
-
-# ---------------------------------------------------------------------------
-# Endpoints de soporte
-# ---------------------------------------------------------------------------
 
 @app.get("/servicios")
 async def listar_servicios():
@@ -392,10 +350,6 @@ async def disponibilidad(
     return {"fecha": fecha, "servicio": servicio, "horarios": libres}
 
 
-# ---------------------------------------------------------------------------
-# Flujo conversacional  (POST /chat)
-# ---------------------------------------------------------------------------
-
 @app.post("/chat")
 async def chat_endpoint(payload: ChatInput):
     """
@@ -431,8 +385,6 @@ async def chat_endpoint(payload: ChatInput):
     if not intencion and "servicios" in mensaje_lower:
         intencion = "servicios"
 
-    # Si el flujo ya está en la etapa de completar el cliente, cualquier nombre libre debe
-    # continuar la reserva aunque la intención venga marcada como 'servicios'.
     if (
         not sesion.get("cliente")
         and sesion.get("servicio")
@@ -444,14 +396,11 @@ async def chat_endpoint(payload: ChatInput):
         sesion["cliente"] = _normalizar_cliente(mensaje)
         intencion = "crear"
 
-    # Si la sesión ya está avanzada en una reserva, no se debe volver al catálogo por una
-    # intención genérica como 'servicios' o 'informacion' en mensajes de continuación.
     if intencion in {"servicios", "catalogo", "ver", "producto", "mascota", "informacion", "consulta", "consultar_servicios", "listar_servicios"} and (
         sesion.get("servicio") or sesion.get("fecha") or sesion.get("hora") or sesion.get("cliente")
     ):
         intencion = "crear"
 
-    # ── Controles especiales ────────────────────────────────────────────────
     if mensaje_lower == "/reset":
         SESIONES.pop(sid, None)
         return {"respuesta": "Sesión reiniciada.", "estado_sesion": {}}
@@ -463,7 +412,6 @@ async def chat_endpoint(payload: ChatInput):
             "estado_sesion": {},
         }
 
-    # ── CONFIRMAR: ejecuta la acción pendiente ──────────────────────────────
     if mensaje_lower == "confirmar":
         pendiente = sesion.get("pendiente")
         if not pendiente:
@@ -520,7 +468,7 @@ async def chat_endpoint(payload: ChatInput):
                 "estado_sesion": {k: v for k, v in sesion.items()},
             }
 
-        # Confirmar CANCELACIÓN
+        # Confirmar CANCELACION
         if accion == "cancelar":
             codigo = pendiente["datos"]["codigo"]
             with _lock:
@@ -538,7 +486,6 @@ async def chat_endpoint(payload: ChatInput):
             sesion.pop("pendiente", None)
             raise HTTPException(status_code=404, detail=f"Reserva '{codigo}' no encontrada.")
 
-    # ── Actualizar datos del resumen pendiente (corrección) ─────────────────
     if intencion in {"continuar", "modificar", "actualizar"} and sesion.get("pendiente"):
         pendiente = sesion["pendiente"]
         for campo in ("cliente", "fecha", "hora", "servicio", "codigo"):
@@ -549,12 +496,10 @@ async def chat_endpoint(payload: ChatInput):
             "estado_sesion": {k: v for k, v in sesion.items()},
         }
 
-    # ── Acumular datos en sesión ────────────────────────────────────────────
     for k, v in datos.items():
         if v and k != "intencion" and k != "accion":
             sesion[k] = v
 
-    # ── Intención: CONSULTAR SERVICIOS / CATÁLOGO ───────────────────────────
     if intencion in {"servicios", "catalogo", "ver", "producto", "mascota", "informacion", "consultar_servicios", "listar_servicios"}:
         negocio = _cargar_negocio()
         servicios = negocio.get("servicios", {})
@@ -588,7 +533,6 @@ async def chat_endpoint(payload: ChatInput):
             "estado_sesion": {k: v for k, v in sesion.items()},
         }
 
-    # ── Intención: CONSULTAR RESERVA ────────────────────────────────────────
     if "consultar" in intencion or intencion == "consulta":
         codigo = datos.get("codigo") or sesion.get("codigo")
         if not codigo:
@@ -608,7 +552,6 @@ async def chat_endpoint(payload: ChatInput):
                 }
         raise HTTPException(status_code=404, detail=f"Reserva '{codigo}' no encontrada.")
 
-    # ── Intención: CANCELAR ─────────────────────────────────────────────────
     if "cancelar" in intencion:
         codigo = datos.get("codigo") or sesion.get("codigo")
         if not codigo:
@@ -632,7 +575,6 @@ async def chat_endpoint(payload: ChatInput):
             "estado_sesion": {k: v for k, v in sesion.items()},
         }
 
-    # ── Intención: RESERVAR / ADOPTAR / COMPRA / CITA ──────────────────────
     es_reserva = any(p in intencion for p in ["adopt", "compra", "reserva", "cita", "visita", "reservar", "crear", "agendar"])
     tiene_datos = bool(sesion.get("servicio") or sesion.get("fecha"))
 
@@ -640,7 +582,6 @@ async def chat_endpoint(payload: ChatInput):
         negocio = _cargar_negocio()
         servicios = negocio.get("servicios", {})
 
-        # Recopilar datos paso a paso
         if not sesion.get("servicio"):
             items = ", ".join(servicios.keys())
             return {
@@ -672,8 +613,6 @@ async def chat_endpoint(payload: ChatInput):
                 "estado_sesion": {k: v for k, v in sesion.items()},
             }
 
-        # Todos los datos disponibles → generar o conservar resumen
-        # Si ya existe un pendiente (p.ej. con correcciones aplicadas), no recrearlo.
         if not sesion.get("pendiente"):
             pendiente = {
                 "accion": "reservar",
@@ -696,7 +635,6 @@ async def chat_endpoint(payload: ChatInput):
             "estado_sesion": {k: v for k, v in sesion.items()},
         }
 
-    # ── Respuesta por defecto ───────────────────────────────────────────────
     return {
         "respuesta": (
             "¡Hola! Bienvenido a Rata mania. "
@@ -706,10 +644,6 @@ async def chat_endpoint(payload: ChatInput):
         "estado_sesion": {k: v for k, v in sesion.items()},
     }
 
-
-# ---------------------------------------------------------------------------
-# Helpers privados
-# ---------------------------------------------------------------------------
 
 def _resumen_pendiente(pendiente: dict) -> str:
     d = pendiente["datos"]
@@ -730,5 +664,5 @@ def _resumen_pendiente(pendiente: dict) -> str:
 def _normalizar_cliente(nombre: str) -> str:
     """Normaliza el nombre del cliente eliminando caracteres no deseados."""
     nombre = re.sub(r"[^a-zA-ZáéíóúñÁÉÍÓÚÑ\s]", "", nombre)
-    nombre = re.sub(r"\s+", " ", nombre)  # Reemplaza múltiples espacios por uno solo
+    nombre = re.sub(r"\s+", " ", nombre)  # Reemplaza multiples espacios por uno solo
     return nombre.strip().title()

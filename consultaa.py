@@ -1,9 +1,3 @@
-"""Lógica del chatbot adaptada para Rata Manía (FastAPI /chat endpoint).
-
-Groq interpreta la intención y extrae los datos, y la FastAPI de Rata Manía
-maneja el flujo conversacional, las sesiones y el almacenamiento.
-"""
-
 import json
 import os
 import re
@@ -11,7 +5,6 @@ from getpass import getpass
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-# Apunta a tu FastAPI de Rata Manía (puerto 8000 o el que uses con uvicorn)
 API_BASE = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8011").rstrip("/")
 CHAT_RUTAS = "/chat"
 
@@ -52,18 +45,6 @@ Responde ÚNICAMENTE con el objeto JSON parseable. Sin bloques de código markdo
 
 
 """
-#INSTRUCCIONES = """
-#Eres el asistente virtual de Rata Manía. Analiza el mensaje del usuario y extrae los datos clave.
-#Devuelve únicamente un objeto JSON estricto con estas claves:
-#- accion: (servicios, disponibilidad, crear, modificar, cancelar, fuera_de_alcance)
-#- cliente: nombre de la persona si lo menciona, si no, cadena vacía ""
-#- servicio: variedad de rata o accesorio mencionado (ej. rata_dumbo), si no, cadena vacía ""
-#- fecha: formato AAAA-MM-DD si se menciona, si no, cadena vacía ""
-#- hora: formato HH:MM si se menciona, si no, cadena vacía ""
-#- codigo: si aplica para modificar/cancelar, si no, cadena vacía ""
-#No inventes datos que el usuario no haya escrito.
-#"""
-
 
 def peticion_json(url, metodo="GET", datos=None, headers=None):
     cuerpo = json.dumps(datos, ensure_ascii=False).encode("utf-8") if datos is not None else None
@@ -94,7 +75,6 @@ def _heuristica_plan(pregunta):
     elif texto and not any(p in lower for p in ["hola", "buenas", "ayuda", "qué", "cuánto", "catalogo", "servicios", "reservar", "agendar", "comprar", "adoptar", "visita", "cita", "cancelar", "modificar", "horario", "ocupado", "libre", "cerrado"]) and re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúñÑ][A-Za-zÁÉÍÓÚáéíóúñÑ .'-]*", texto):
         cliente = texto.strip()
 
-    # 2) Si el usuario está dando un nombre, no reiniciar el catálogo; seguir la reserva.
     if cliente:
         return {
             "accion": "crear",
@@ -105,7 +85,6 @@ def _heuristica_plan(pregunta):
             "codigo": "",
         }
 
-    # 3) Intención y extracción del resto
     accion = "servicios"
     if any(p in lower for p in ["cancelar", "anular", "borrar"]):
         accion = "cancelar"
@@ -120,13 +99,11 @@ def _heuristica_plan(pregunta):
     elif any(p in lower for p in ["fuera", "aleatorio", "nada", "otro tema"]):
         accion = "fuera_de_alcance"
 
-    # Si el mensaje solo trae una fecha o una hora, lo tratamos como continuación.
     if re.search(r"\b\d{4}-\d{2}-\d{2}\b", texto) and not any(p in lower for p in ["hola", "catalogo", "servicios", "qué", "cuánto"]):
         accion = "crear"
     if re.search(r"\b\d{1,2}:\d{2}\b", texto) and not any(p in lower for p in ["hola", "catalogo", "servicios", "qué", "cuánto"]):
         accion = "crear"
 
-    # Si el texto menciona un servicio o una visita con servicio, también es crear.
     servicios = [
         "rata_dumbo", "rata_husky", "rata_hairless",
         "jaula_equipada", "alimento_premium"

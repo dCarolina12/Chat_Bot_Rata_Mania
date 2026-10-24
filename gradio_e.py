@@ -6,9 +6,6 @@ from getpass import getpass
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-# ==============================================================================
-# 1. CONSTANTES Y CONFIGURACIÓN (Extraídas de consultaa.py)
-# ==============================================================================
 API_BASE = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8011").rstrip("/")
 CHAT_RUTAS = "/chat"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -48,10 +45,6 @@ Mensaje a analizar:
 
 Responde ÚNICAMENTE con el objeto JSON parseable. Sin bloques de código markdown extra si no son necesarios, sin explicaciones.
 """
-
-# ==============================================================================
-# 2. FUNCIONES BASE (Extraídas de consultaa.py)
-# ==============================================================================
 
 def peticion_json(url, metodo="GET", datos=None, headers=None):
     cuerpo = json.dumps(datos, ensure_ascii=False).encode("utf-8") if datos is not None else None
@@ -196,9 +189,6 @@ def ejecutar(plan, pregunta_original, session_id):
 
     return peticion_json(url, "POST", {"session_id": session_id, "mensaje": pregunta, "datos": datos_payload})
 
-# ==============================================================================
-# 3. LÓGICA DE GRADIO (Adaptada del bloque main)
-# ==============================================================================
 
 def responder_usuario(mensaje, historial):
     if not mensaje.strip():
@@ -224,9 +214,6 @@ def responder_usuario(mensaje, historial):
     except Exception as e:
         return f"Ocurrió un error general: {str(e)}"
 
-# ==============================================================================
-# 4. INTERFAZ GRÁFICA
-# ==============================================================================
 
 demo = gr.ChatInterface(
     fn=responder_usuario,
