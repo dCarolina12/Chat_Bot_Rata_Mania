@@ -226,5 +226,17 @@
     "estado": "activa",
     "creada_en": "2026-10-21T19:22:59.251005-05:00",
     "cancelada_en": null
+  },
+  {
+    "codigo": "PN-7986D8D0",
+    "cliente": "Pumbolita",
+    "item": "rata_husky",
+    "fecha": "2026-12-31",
+    "hora": "15:30",
+    "precio_cop": 25,
+    "duracion_minutos": "adopcion_inmediata",
+    "estado": "cancelada",
+    "creada_en": "2026-11-19T12:54:03.340257-05:00",
+    "cancelada_en": "2026-11-19T13:03:50.221587-05:00"
   }
 ]

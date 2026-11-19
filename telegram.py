@@ -5,6 +5,7 @@ from getpass import getpass
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 import telebot
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 API_BASE = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8011").rstrip("/")
@@ -50,9 +51,6 @@ Mensaje a analizar:
 "{input}"
 
 Responde ÚNICAMENTE con el objeto JSON parseable. Sin bloques de código markdown extra si no son necesarios, sin explicaciones.
-
-
-
 """
 
 
@@ -88,7 +86,6 @@ def _heuristica_plan(pregunta):
     texto = (pregunta or "").strip()
     lower = texto.lower()
 
-    # 1) Nombres directos del cliente: "jhon", "bartolo fernandez", "a nombre de jhon"
     cliente = ""
     m = re.search(
         r"(?:a nombre de|me llamo|mi nombre es|soy)\s+([A-Za-zÁÉÍÓÚáéíóúñÑ][A-Za-zÁÉÍÓÚáéíóúñÑ .'-]+)",
@@ -418,7 +415,6 @@ def ejecutar(plan, pregunta_original, session_id, api_base=API_BASE):
         respuesta_fastapi = peticion_json(url, "POST", cuerpo_peticion)
         return respuesta_fastapi
 
-    # Filtramos valores del plan que puedan ser palabras de control o vacíos.
     plan = dict(plan or {})
     if str(plan.get("cliente", "")).strip().lower() in {"confirmar", "abortar", "no"}:
         plan["cliente"] = ""
@@ -475,8 +471,28 @@ def _mensaje_http_409(plan, error):
     return f"Eso no se puede confirmar porque el horario ya no está disponible. Elige otra fecha u hora libre. Detalle: {detalle}"
 
 
+# --- TECLADOS INLINE DE TELEGRAM ---
+def crear_teclado_confirmacion():
+    """Genera los botones inline de Confirmar y Cancelar debajo del mensaje."""
+    markup = InlineKeyboardMarkup(row_width=2)
+    btn_confirmar = InlineKeyboardButton("Confirmar", callback_data="confirmar")
+    btn_cancelar = InlineKeyboardButton("Cancelar", callback_data="abortar")
+    markup.add(btn_confirmar, btn_cancelar)
+    return markup
+
+
+def _requiere_confirmacion(resultado, texto_respuesta):
+    """Detecta si el backend está pidiendo confirmación al usuario."""
+    if isinstance(resultado, dict) and resultado.get("requiere_confirmacion"):
+        return True
+    texto = (texto_respuesta or "").lower()
+    return "confirmar" in texto and any(
+        palabra in texto for palabra in ("cancelar", "abortar", "no")
+    )
+
+
 # --- CONFIGURACIÓN DEL BOT Y CREDENCIALES ---
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "89....AvdNHBXgl6wxBm_U")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "896758...gl6wxBm_U")
 CLAVE_GROQ = (
     os.getenv("GROQ_API_KEY", "").strip() or getpass("API key de Groq: ").strip()
 )
@@ -485,18 +501,13 @@ MODELO_GROQ = (
     or input("ID del modelo de Groq (ej. llama3-70b-8192): ").strip()
 )
 
-# Inicializamos el bot
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
-@bot.message_handler(func=lambda message: True)
-def responder_telegram(message):
-    # Usamos el ID del chat de Telegram como session_id para identificar de manera única a cada usuario
-    session_id = str(message.chat.id)
-    pregunta = (message.text or "").strip()
-
-    if not pregunta:
-        return
+def _procesar_y_responder(chat_id, pregunta, mensaje_original=None):
+    """Flujo unificado para procesar mensajes de texto y clics en botones."""
+    session_id = str(chat_id)
+    plan = {}
 
     try:
         # 1. Interpretamos la intención con Groq (o la heurística)
@@ -505,27 +516,64 @@ def responder_telegram(message):
         # 2. Enviamos el resultado a tu API en FastAPI
         resultado = ejecutar(plan, pregunta, session_id)
 
-        # 3. Respondemos al usuario en Telegram
+        # 3. Verificamos si debemos adjuntar los botones de Confirmar / Cancelar
         texto_respuesta = resultado.get("respuesta", str(resultado))
-        bot.reply_to(message, texto_respuesta)
+        teclado = (
+            crear_teclado_confirmacion()
+            if _requiere_confirmacion(resultado, texto_respuesta)
+            else None
+        )
+
+        # 4. Respondemos al usuario en Telegram
+        if mensaje_original is not None:
+            bot.reply_to(mensaje_original, texto_respuesta, reply_markup=teclado)
+        else:
+            bot.send_message(chat_id, texto_respuesta, reply_markup=teclado)
 
     except HTTPError as error:
         if error.code == 409:
-            bot.reply_to(message, _mensaje_http_409(plan, error))
+            bot.send_message(chat_id, _mensaje_http_409(plan, error))
         else:
-            bot.reply_to(
-                message,
-                f"Error HTTP {
-                    error.code
-                }. Asegúrate de que FastAPI (uvicorn) esté corriendo.",
+            bot.send_message(
+                chat_id,
+                f"Error HTTP {error.code}. Asegúrate de que FastAPI (uvicorn) esté corriendo.",
             )
-    except (URLError, TimeoutError) as e:
-        bot.reply_to(
-            message,
+    except (URLError, TimeoutError):
+        bot.send_message(
+            chat_id,
             "No pude conectar con FastAPI. Verifica que uvicorn esté corriendo.",
         )
     except Exception as e:
-        bot.reply_to(message, f"Ocurrió un error procesando tu mensaje: {e}")
+        bot.send_message(chat_id, f"Ocurrió un error procesando tu mensaje: {e}")
+
+
+@bot.message_handler(func=lambda message: True)
+def responder_telegram(message):
+    pregunta = (message.text or "").strip()
+    if not pregunta:
+        return
+    _procesar_y_responder(message.chat.id, pregunta, mensaje_original=message)
+
+
+@bot.callback_query_handler(
+    func=lambda call: call.data in {"confirmar", "abortar", "cancelar solicitud"}
+)
+def manejar_botones_confirmacion(call):
+    # Detiene el indicador de carga en el botón presionado
+    bot.answer_callback_query(call.id)
+
+    # Elimina los botones del mensaje anterior para evitar que se presionen dos veces
+    try:
+        bot.edit_message_reply_markup(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=None,
+        )
+    except Exception:
+        pass
+
+    # Envía la acción del botón ("confirmar" o "abortar") al mismo flujo del bot
+    _procesar_y_responder(call.message.chat.id, call.data)
 
 
 # --- ARRANQUE DEL SCRIPT ---
