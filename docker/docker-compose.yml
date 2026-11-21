@@ -34,6 +34,19 @@ services:
     volumes:
       - reservas-data:/data
       - ../:/app
+  
+  telegram:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    content_name: rata_mania_telegram
+    restart: unless-stopped
+    command: python telegram.py
+    depends_on: 
+      - api
+    volumes:
+      - reservas-data:/data
+      - ../:/app
 
 volumes:
   reservas-data:

@@ -1,5 +1,6 @@
 import json
 import os
+from dotenv import load_dotenv
 import re
 from getpass import getpass
 from urllib.error import HTTPError, URLError
@@ -8,6 +9,7 @@ import telebot
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
+load_dotenv()
 API_BASE = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8011").rstrip("/")
 CHAT_RUTAS = "/chat"
 
