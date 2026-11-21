@@ -9,8 +9,6 @@ services:
     ports:
       - "8011:8011"
     environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - GROQ_MODEL=${GROQ_MODEL}
       - CHATBOT_API_URL=http://api:8011
     volumes:
       - reservas-data:/data
@@ -25,9 +23,9 @@ services:
     command: python gradio_e.py
     ports:
       - "7860:7860"
+    env_file:
+      - ../.env
     environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - GROQ_MODEL=${GROQ_MODEL}
       - CHATBOT_API_URL=http://api:8011
     depends_on:
       - api
@@ -39,9 +37,13 @@ services:
     build:
       context: ../
       dockerfile: docker/Dockerfile
-    content_name: rata_mania_telegram
+    container_name: rata_mania_telegram
     restart: unless-stopped
     command: python telegram.py
+    env_file:
+      - ../.env 
+    environment:
+      CHATBOT_API_URL: http://api:8011
     depends_on: 
       - api
     volumes:

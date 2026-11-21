@@ -1,6 +1,5 @@
 import json
 import os
-from dotenv import load_dotenv
 import re
 from getpass import getpass
 from urllib.error import HTTPError, URLError
@@ -9,7 +8,7 @@ import telebot
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
-load_dotenv()
+
 API_BASE = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8011").rstrip("/")
 CHAT_RUTAS = "/chat"
 
@@ -494,7 +493,7 @@ def _requiere_confirmacion(resultado, texto_respuesta):
 
 
 # --- CONFIGURACIÓN DEL BOT Y CREDENCIALES ---
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "896758...gl6wxBm_U")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "").strip()
 CLAVE_GROQ = (
     os.getenv("GROQ_API_KEY", "").strip() or getpass("API key de Groq: ").strip()
 )

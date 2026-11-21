@@ -238,5 +238,17 @@
     "estado": "cancelada",
     "creada_en": "2026-11-19T12:54:03.340257-05:00",
     "cancelada_en": "2026-11-19T13:03:50.221587-05:00"
+  },
+  {
+    "codigo": "PN-EC0F6883",
+    "cliente": "De pinguinita",
+    "item": "rata_husky",
+    "fecha": "2026-12-01",
+    "hora": "14:30",
+    "precio_cop": 25,
+    "duracion_minutos": "adopcion_inmediata",
+    "estado": "activa",
+    "creada_en": "2026-11-21T18:00:36.553097-05:00",
+    "cancelada_en": null
   }
 ]

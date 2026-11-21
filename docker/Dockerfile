@@ -5,6 +5,8 @@ WORKDIR /app
 # Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y sqlite3
+
 
 # Copy application files y dependencias de datos
 COPY telegram.py .
@@ -14,7 +16,7 @@ COPY negocio.json .
 COPY reservas.json .
 COPY ratas.db .
 COPY scripts/ ./scripts/
-COPY .env .
+
 # Otorgar permisos de ejecución al script bash llamado por main.py
 RUN chmod +x scripts/ratadb.sh
 
