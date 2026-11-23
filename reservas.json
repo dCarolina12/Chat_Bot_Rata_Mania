@@ -382,5 +382,17 @@
     "estado": "activa",
     "creada_en": "2026-11-22T20:58:20.795789-05:00",
     "cancelada_en": null
+  },
+  {
+    "codigo": "PN-942B5AAB",
+    "cliente": "Jhonsitobonito",
+    "item": "rata_husky",
+    "fecha": "2026-12-10",
+    "hora": "15:30",
+    "precio_cop": 25,
+    "duracion_minutos": "adopcion_inmediata",
+    "estado": "activa",
+    "creada_en": "2026-11-22T22:53:13.745195-05:00",
+    "cancelada_en": null
   }
 ]
